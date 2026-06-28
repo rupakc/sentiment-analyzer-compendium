@@ -9,6 +9,9 @@ it("loads and shows explanation summary", async () => {
     explanation_type: "native",
     summary: "because great is positive",
     evidence: [],
+    method: "lexicon sum",
+    steps: ["looked up 'great'"],
+    biases: ["lexicon coverage gaps"],
   });
   render(
     <ExplanationModal

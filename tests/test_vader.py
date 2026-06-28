@@ -17,4 +17,7 @@ def test_explain_lists_word_contributions():
     r = m.analyze("great movie")
     e = m.explain("great movie", r)
     assert e.explanation_type == "native"
-    assert any(ev.get("word") == "great" for ev in e.evidence)
+    assert any(ev.get("label") == "great" for ev in e.evidence)
+    assert e.method
+    assert e.steps
+    assert e.biases

@@ -50,12 +50,45 @@ class CrfModel:
         )
 
     def explain(self, text: str, result: AnalysisResult) -> Explanation:
+        aspects = result.aspects or []
         ev = [
-            {"aspect": a.term, "polarity": a.polarity} for a in (result.aspects or [])
+            {"label": a.term, "detail": "ASP", "weight": _aspect_weight(a.polarity)}
+            for a in aspects
+        ]
+        tokens = text.split()
+        compound = _vader.polarity_scores(text)["compound"]
+        terms = ", ".join(a.term for a in aspects) or "none"
+        steps = [
+            f"Whitespace-tokenized the text into {len(tokens)} tokens.",
+            "Extracted per-token features (word, prefix/suffix, position, neighbors).",
+            f"CRF Viterbi-decoded the BIO/ASP tag sequence (globally normalized); "
+            f"tagged aspect terms: {terms}.",
+            f"Borrowed sentence-level polarity from VADER compound={compound:.2f} and "
+            f"applied it to every aspect, giving overall '{result.label}'.",
         ]
         return Explanation(
             self.id,
             "native",
             "CRF tagged these aspect terms (BIO sequence labeling); polarity assigned per aspect.",
             ev,
+            method=(
+                "Linear-chain CRF Viterbi-decodes a BIO/ASP tag sequence over token features; "
+                "polarity per aspect is borrowed from VADER's sentence compound."
+            ),
+            steps=steps,
+            biases=[
+                # ponytail: SENTS in scripts/train_models.py is 6 hand-labeled sentences
+                "Trained on a TINY hand-labeled set (~6 sentences), so the tagger recognizes "
+                "only aspect terms resembling those examples.",
+                "Polarity is NOT learned by the CRF: it is VADER's single sentence-level "
+                "compound copied onto every aspect, so all aspects share one sentiment.",
+                "Aspect spans are only as good as the tiny label set; multi-word aspects and "
+                "unseen terms are routinely missed.",
+                "Cannot express conflicting per-aspect sentiment (e.g. 'great camera but poor "
+                "sound' gets one polarity for both).",
+            ],
         )
+
+
+def _aspect_weight(polarity: str) -> float:
+    return {"positive": 1.0, "negative": -1.0}.get(polarity, 0.0)

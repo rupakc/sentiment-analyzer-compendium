@@ -2,9 +2,11 @@
   "permissions": {
     "allow": ["Bash(pytest*)", "Bash(npm run*)", "Bash(python scripts/*)"],
     "deny": [
-      "Read(./.env)", "Read(./.env.local)",
+      "Read(.env*)",
       "Read(./.venv/**)", "Read(./frontend/node_modules/**)",
-      "Read(./frontend/dist/**)", "Read(./artifacts/**)"
+      "Read(./frontend/dist/**)", "Read(./artifacts/**)",
+      "Read(**/*.lock)", "Read(./frontend/package-lock.json)",
+      "Read(**/__pycache__/**)", "Read(**/.pytest_cache/**)"
     ]
   },
   "hooks": {

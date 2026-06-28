@@ -1,63 +1,89 @@
 import type { AnalysisResult } from "../types";
 
-const COLOR: Record<string, string> = {
-  positive: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  negative: "bg-rose-50 text-rose-700 border-rose-200",
-  neutral: "bg-slate-50 text-slate-600 border-slate-200",
+const TONE: Record<string, { pill: string; bar: string }> = {
+  positive: { pill: "pill-pos", bar: "bg-pos" },
+  negative: { pill: "pill-neg", bar: "bg-neg" },
+  neutral: { pill: "pill-neu", bar: "bg-neu" },
+};
+const FACE: Record<string, string> = {
+  positive: "▲",
+  negative: "▼",
+  neutral: "●",
 };
 
 export default function ModelCard({
   name,
   family,
   result,
+  index = 0,
   onClick,
 }: {
   name: string;
   family: string;
   result: AnalysisResult;
+  index?: number;
   onClick: () => void;
 }) {
   if (result.error && !result.available)
     return (
-      <div className="rounded-xl border p-4 opacity-60">
-        <b>{name}</b>
-        <p className="text-sm text-slate-500">{result.error}</p>
+      <div className="card animate-fade-up p-4 opacity-70" style={delay(index)}>
+        <div className="flex items-center justify-between">
+          <b className="font-display">{name}</b>
+          <span className="pill bg-neu-wash text-neu">unavailable</span>
+        </div>
+        <p className="mt-2 text-sm text-ink-faint">{result.error}</p>
       </div>
     );
+
+  const tone = TONE[result.label] ?? TONE.neutral;
+  const pct = Math.round(result.confidence * 100);
+
   return (
     <button
       onClick={onClick}
-      className="rounded-xl border bg-white p-4 text-left shadow-sm transition hover:shadow-md"
+      style={delay(index)}
+      className="card group animate-fade-up p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lift"
     >
-      <div className="flex items-center justify-between">
-        <b>{name}</b>
-        <span className="text-xs text-slate-400">{family}</span>
+      <div className="flex items-start justify-between">
+        <div>
+          <b className="font-display text-base">{name}</b>
+          <p className="text-xs text-ink-faint">{family}</p>
+        </div>
+        <span className={`pill ${tone.pill}`}>
+          <span aria-hidden>{FACE[result.label] ?? FACE.neutral}</span>
+          {result.label}
+        </span>
       </div>
-      <span
-        className={`mt-2 inline-block rounded-full border px-2 py-0.5 text-sm ${
-          COLOR[result.label] || COLOR.neutral
-        }`}
-      >
-        {result.label}
-      </span>
-      <div className="mt-3 h-2 w-full rounded bg-slate-100">
+
+      <div className="mt-4 flex items-center justify-between text-xs text-ink-faint">
+        <span>confidence</span>
+        <span className="tnum text-ink-soft">{pct}%</span>
+      </div>
+      <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-line">
         <div
-          className="h-2 rounded bg-indigo-500"
-          style={{ width: `${Math.round(result.confidence * 100)}%` }}
+          className={`h-2 rounded-full ${tone.bar} transition-[width] duration-700 ease-out`}
+          style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="mt-1 text-xs text-slate-400">
-        {Math.round(result.confidence * 100)}% confidence · click for why
-      </p>
+
       {result.aspects && result.aspects.length > 0 && (
-        <ul className="mt-2 text-xs text-slate-600">
+        <ul className="mt-3 flex flex-wrap gap-1.5">
           {result.aspects.map((a, i) => (
-            <li key={i}>
-              {a.term}: {a.polarity}
+            <li
+              key={i}
+              className={`pill ${TONE[a.polarity]?.pill ?? "pill-neu"} text-[11px]`}
+            >
+              {a.term}
             </li>
           ))}
         </ul>
       )}
+
+      <p className="mt-3 text-xs font-medium text-brand-ink opacity-0 transition group-hover:opacity-100">
+        How did it decide? →
+      </p>
     </button>
   );
 }
+
+const delay = (i: number) => ({ animationDelay: `${Math.min(i, 6) * 60}ms` });

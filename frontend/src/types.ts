@@ -22,5 +22,8 @@ export interface Explanation {
   model_id: string;
   explanation_type: "native" | "ai-narrated";
   summary: string;
-  evidence: Record<string, unknown>[];
+  evidence: { label: string; detail?: string; weight?: number }[];
+  method: string;
+  steps: string[];
+  biases: string[];
 }

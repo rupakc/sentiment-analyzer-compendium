@@ -1,3 +1,66 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+    background-image: radial-gradient(
+        circle at 1px 1px,
+        rgba(16, 23, 37, 0.035) 1px,
+        transparent 0
+      );
+    background-size: 22px 22px; /* faint lab-grid dot field */
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+  /* numeric / instrument readouts */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    @apply font-mono;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand/60 ring-offset-2 ring-offset-paper;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-surface shadow-card;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  /* sentiment-coded chips */
+  .pill-pos {
+    @apply bg-pos-wash text-pos;
+  }
+  .pill-neg {
+    @apply bg-neg-wash text-neg;
+  }
+  .pill-neu {
+    @apply bg-neu-wash text-neu;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-5 py-2.5
+      font-medium text-white shadow-card transition
+      hover:bg-brand-ink active:translate-y-px
+      disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

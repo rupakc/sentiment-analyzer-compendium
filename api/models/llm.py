@@ -68,8 +68,46 @@ class LlmModel:
         )
 
     def explain(self, text: str, result: AnalysisResult) -> Explanation:
-        summary = narrate(
-            f"Explain in 2-3 sentences why the sentiment of {text!r} is "
-            f"'{result.label}'. Note any nuance, negation, or sarcasm."
+        static = (
+            f"Claude classified this text as '{result.label}' "
+            f"(confidence {result.confidence:.0%}) by reading it holistically and weighing "
+            f"its sentiment cues. Set ANTHROPIC_API_KEY for a generated, text-specific rationale."
         )
-        return Explanation(self.id, "native", summary, [])
+        narrated = narrate(
+            f"You are explaining a zero-shot sentiment call. The text {text!r} was judged "
+            f"'{result.label}' (confidence {result.confidence:.0%}). In 2-4 sentences name the "
+            f"specific cues that drove this, how any negation or sarcasm was handled, and why "
+            f"the confidence is at that level."
+        )
+        # ponytail: reuse narrate()'s unavailable sentinel rather than re-checking the key.
+        summary = static if narrated.startswith("Explanation unavailable") else narrated
+
+        steps = [
+            f"Read the full text {text!r} as a single prompt (no training on this task).",
+            "Weighed sentiment cues holistically using pretrained world knowledge, including "
+            "negation and sarcasm in context.",
+            f"Returned a structured judgment: label '{result.label}' with a self-reported "
+            f"confidence of {result.confidence:.0%} and a short reason.",
+        ]
+        return Explanation(
+            self.id,
+            "ai-narrated",
+            summary,
+            [],
+            method=(
+                "Zero-shot prompting of a large language model that reads the text and returns "
+                "a label, confidence, and natural-language rationale."
+            ),
+            steps=steps,
+            biases=[
+                "Prompt-sensitive: small wording changes in the prompt can change the label "
+                "or confidence.",
+                "May state a confidence it cannot actually justify (poorly calibrated, "
+                "self-reported numbers).",
+                "Knowledge is frozen at a training cutoff, so very recent slang or events may "
+                "be misread.",
+                "Tends toward verbosity and can rationalize after the fact rather than report "
+                "true decision factors.",
+                "Can reflect social biases present in its training data.",
+            ],
+        )

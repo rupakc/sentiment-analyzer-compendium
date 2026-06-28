@@ -16,4 +16,8 @@ def test_explain_lists_top_tokens():
     r = m.analyze("terrible awful bad")
     e = m.explain("terrible awful bad", r)
     assert e.explanation_type == "native"
-    assert len(e.evidence) >= 1 and "token" in e.evidence[0]
+    assert len(e.evidence) >= 1 and "label" in e.evidence[0]
+    assert "weight" in e.evidence[0]
+    assert e.method
+    assert e.steps
+    assert e.biases

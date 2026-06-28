@@ -19,9 +19,12 @@ it("analyzes and renders a card", async () => {
     },
   ]);
   render(<CompareTab onRun={() => {}} />);
-  await screen.findByText("VADER");
+  await screen.findByText("VADER"); // available models are preselected on load
   fireEvent.change(screen.getByRole("textbox"), { target: { value: "I love it" } });
-  fireEvent.click(screen.getByText("VADER")); // select model
   fireEvent.click(screen.getByRole("button", { name: /analyze/i }));
-  await waitFor(() => expect(screen.getByText(/positive/i)).toBeInTheDocument());
+  // a result card renders (its hover affordance is unique to cards)
+  await waitFor(() =>
+    expect(screen.getByText(/how did it decide/i)).toBeInTheDocument(),
+  );
+  expect(screen.getAllByText(/positive/i).length).toBeGreaterThan(0);
 });

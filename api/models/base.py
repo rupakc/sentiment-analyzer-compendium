@@ -26,6 +26,12 @@ class Explanation:
     explanation_type: str  # "native" | "ai-narrated"
     summary: str
     evidence: list[dict] = field(default_factory=list)
+    # evidence items: {"label": str, "detail": str (optional), "weight": float (optional)}
+    method: str = ""  # one sentence naming the mechanism
+    steps: list[str] = field(
+        default_factory=list
+    )  # ordered reasoning chain for THIS text
+    biases: list[str] = field(default_factory=list)  # model-family-specific caveats
 
 
 @runtime_checkable
