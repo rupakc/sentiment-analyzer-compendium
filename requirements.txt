@@ -1,0 +1,3 @@
+# Vercel's Python builder installs deps from a root-level requirements.txt.
+# Single source of truth lives in api/requirements.txt.
+-r api/requirements.txt
