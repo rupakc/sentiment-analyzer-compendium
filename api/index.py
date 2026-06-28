@@ -7,7 +7,10 @@ from api.models.registry import list_models, get_model
 
 app = FastAPI(title="Sentiment Comparison API")
 app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

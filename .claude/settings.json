@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": ["Bash(pytest*)", "Bash(npm run*)", "Bash(python scripts/*)"],
-    "deny": ["Read(./.env)", "Read(./.env.local)"]
+    "deny": [
+      "Read(./.env)", "Read(./.env.local)",
+      "Read(./.venv/**)", "Read(./frontend/node_modules/**)",
+      "Read(./frontend/dist/**)", "Read(./artifacts/**)"
+    ]
   },
   "hooks": {
     "PostToolUse": [

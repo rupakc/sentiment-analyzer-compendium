@@ -12,8 +12,8 @@ class Aspect:
 @dataclass
 class AnalysisResult:
     model_id: str
-    label: str                      # "positive" | "negative" | "neutral"
-    confidence: float               # 0..1
+    label: str  # "positive" | "negative" | "neutral"
+    confidence: float  # 0..1
     scores: dict[str, float] = field(default_factory=dict)
     aspects: list[Aspect] | None = None
     available: bool = True
@@ -23,7 +23,7 @@ class AnalysisResult:
 @dataclass
 class Explanation:
     model_id: str
-    explanation_type: str           # "native" | "ai-narrated"
+    explanation_type: str  # "native" | "ai-narrated"
     summary: str
     evidence: list[dict] = field(default_factory=list)
 

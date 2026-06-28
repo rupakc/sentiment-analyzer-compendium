@@ -17,8 +17,10 @@ class VaderModel:
         s = _analyzer.polarity_scores(text)
         compound = s["compound"]
         label = (
-            "positive" if compound >= 0.05
-            else "negative" if compound <= -0.05
+            "positive"
+            if compound >= 0.05
+            else "negative"
+            if compound <= -0.05
             else "neutral"
         )
         return AnalysisResult(self.id, label, abs(compound), scores=s)
@@ -27,7 +29,8 @@ class VaderModel:
         lex = _analyzer.lexicon
         evidence = [
             {"word": w, "valence": lex[w.lower()]}
-            for w in text.split() if w.lower() in lex
+            for w in text.split()
+            if w.lower() in lex
         ]
         return Explanation(
             self.id,

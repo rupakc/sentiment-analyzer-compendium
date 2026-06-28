@@ -3,6 +3,7 @@
 ponytail: tiny built-in datasets keep the repo self-contained and CPU-fast.
 Swap CORPUS / SENTS for SST-2 and SemEval ABSA subsets when accuracy matters.
 """
+
 import pickle
 import pathlib
 import sys
@@ -34,7 +35,13 @@ CORPUS = [
 SENTS = [
     [("the", "O"), ("battery", "ASP"), ("is", "O"), ("great", "O")],
     [("the", "O"), ("screen", "ASP"), ("is", "O"), ("terrible", "O")],
-    [("amazing", "O"), ("camera", "ASP"), ("but", "O"), ("poor", "O"), ("sound", "ASP")],
+    [
+        ("amazing", "O"),
+        ("camera", "ASP"),
+        ("but", "O"),
+        ("poor", "O"),
+        ("sound", "ASP"),
+    ],
     [("the", "O"), ("food", "ASP"), ("was", "O"), ("delicious", "O")],
     [("slow", "O"), ("service", "ASP"), ("and", "O"), ("cold", "O"), ("coffee", "ASP")],
     [("the", "O"), ("price", "ASP"), ("is", "O"), ("fair", "O")],
@@ -43,10 +50,12 @@ SENTS = [
 
 def train_logreg():
     X, y = zip(*CORPUS)
-    pipe = Pipeline([
-        ("tfidf", TfidfVectorizer(ngram_range=(1, 2))),
-        ("clf", LogisticRegression(max_iter=1000)),
-    ])
+    pipe = Pipeline(
+        [
+            ("tfidf", TfidfVectorizer(ngram_range=(1, 2))),
+            ("clf", LogisticRegression(max_iter=1000)),
+        ]
+    )
     pipe.fit(X, y)
     with open(ART / "logreg.pkl", "wb") as f:
         pickle.dump(pipe, f)
@@ -56,8 +65,13 @@ def train_logreg():
 def train_crf():
     X = [[token_features([w for w, _ in s], i) for i in range(len(s))] for s in SENTS]
     y = [[tag for _, tag in s] for s in SENTS]
-    crf = sklearn_crfsuite.CRF(algorithm="lbfgs", max_iterations=50,
-                               c1=0.1, c2=0.1, all_possible_transitions=True)
+    crf = sklearn_crfsuite.CRF(
+        algorithm="lbfgs",
+        max_iterations=50,
+        c1=0.1,
+        c2=0.1,
+        all_possible_transitions=True,
+    )
     crf.fit(X, y)
     with open(ART / "crf.pkl", "wb") as f:
         pickle.dump(crf, f)

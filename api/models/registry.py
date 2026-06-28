@@ -6,7 +6,8 @@ from api.models.distilbert import DistilBertModel
 from api.models.llm import LlmModel
 
 REGISTRY: dict[str, SentimentModel] = {
-    m.id: m for m in (VaderModel(), LogRegModel(), CrfModel(), DistilBertModel(), LlmModel())
+    m.id: m
+    for m in (VaderModel(), LogRegModel(), CrfModel(), DistilBertModel(), LlmModel())
 }
 
 
@@ -18,7 +19,12 @@ def get_model(model_id: str) -> SentimentModel:
 
 def list_models() -> list[dict]:
     return [
-        {"id": m.id, "name": m.name, "family": m.family,
-         "description": m.description, "available": m.available()}
+        {
+            "id": m.id,
+            "name": m.name,
+            "family": m.family,
+            "description": m.description,
+            "available": m.available(),
+        }
         for m in REGISTRY.values()
     ]

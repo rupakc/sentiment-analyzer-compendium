@@ -12,6 +12,7 @@ def _client_or_init():
     global _client
     if _client is None:
         from anthropic import Anthropic
+
         _client = Anthropic()  # reads ANTHROPIC_API_KEY from env
     return _client
 
@@ -21,7 +22,8 @@ def narrate(prompt: str) -> str:
         return "Explanation unavailable (ANTHROPIC_API_KEY not set)."
     try:
         msg = _client_or_init().messages.create(
-            model=MODEL, max_tokens=300,
+            model=MODEL,
+            max_tokens=300,
             messages=[{"role": "user", "content": prompt}],
         )
         return msg.content[0].text.strip()
@@ -40,23 +42,30 @@ class LlmModel:
 
     def analyze(self, text: str) -> AnalysisResult:
         if not self.available():
-            return AnalysisResult(self.id, "neutral", 0.0, available=False,
-                                  error="ANTHROPIC_API_KEY not set")
+            return AnalysisResult(
+                self.id,
+                "neutral",
+                0.0,
+                available=False,
+                error="ANTHROPIC_API_KEY not set",
+            )
         prompt = (
-            'Classify the sentiment of the text. Respond ONLY with JSON '
+            "Classify the sentiment of the text. Respond ONLY with JSON "
             '{"label": "positive|negative|neutral", "confidence": 0..1, '
             f'"reason": "short"}}. Text: {text!r}'
         )
         try:
             msg = _client_or_init().messages.create(
-                model=MODEL, max_tokens=200,
+                model=MODEL,
+                max_tokens=200,
                 messages=[{"role": "user", "content": prompt}],
             )
             data = json.loads(msg.content[0].text)
         except Exception as e:
             return AnalysisResult(self.id, "neutral", 0.0, available=True, error=str(e))
-        return AnalysisResult(self.id, data["label"], float(data["confidence"]),
-                              scores={})
+        return AnalysisResult(
+            self.id, data["label"], float(data["confidence"]), scores={}
+        )
 
     def explain(self, text: str, result: AnalysisResult) -> Explanation:
         summary = narrate(
