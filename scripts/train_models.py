@@ -1,16 +1,22 @@
-"""Train tiny sentiment models on a small labeled set; pickle to artifacts/.
+"""Train tiny sentiment models on a small labeled set; export slim artifacts.
 
 ponytail: tiny built-in datasets keep the repo self-contained and CPU-fast.
 Swap CORPUS / SENTS for SST-2 and SemEval ABSA subsets when accuracy matters.
+
+Training uses scikit-learn (logreg) but we EXPORT plain artifacts so the
+serverless runtime needs neither scikit-learn nor scipy (the 148 MB that blew
+the Vercel function limit):
+  - logreg -> artifacts/logreg.json   (vocab + idf + coefficients; pure-python inference)
+  - crf    -> artifacts/crf.crfsuite  (native python-crfsuite model; no sklearn wrapper)
 """
 
-import pickle
+import json
 import pathlib
 import sys
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-import sklearn_crfsuite
+import pycrfsuite
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from api.models.crf_features import token_features  # noqa: E402
@@ -57,25 +63,37 @@ def train_logreg():
         ]
     )
     pipe.fit(X, y)
-    with open(ART / "logreg.pkl", "wb") as f:
-        pickle.dump(pipe, f)
-    print("trained logreg ->", ART / "logreg.pkl")
+    vec = pipe.named_steps["tfidf"]
+    clf = pipe.named_steps["clf"]
+    # Export everything pure-python inference needs to replicate the pipeline.
+    artifact = {
+        "vocab": {term: int(i) for term, i in vec.vocabulary_.items()},
+        "idf": vec.idf_.tolist(),
+        "coef": clf.coef_.tolist(),  # (n_classes, n_feat); (1, n) when binary
+        "intercept": clf.intercept_.tolist(),
+        "classes": clf.classes_.tolist(),
+    }
+    (ART / "logreg.json").write_text(json.dumps(artifact))
+    print("trained logreg ->", ART / "logreg.json")
 
 
 def train_crf():
-    X = [[token_features([w for w, _ in s], i) for i in range(len(s))] for s in SENTS]
-    y = [[tag for _, tag in s] for s in SENTS]
-    crf = sklearn_crfsuite.CRF(
-        algorithm="lbfgs",
-        max_iterations=50,
-        c1=0.1,
-        c2=0.1,
-        all_possible_transitions=True,
+    trainer = pycrfsuite.Trainer(verbose=False)
+    for s in SENTS:
+        words = [w for w, _ in s]
+        xseq = [token_features(words, i) for i in range(len(s))]
+        yseq = [tag for _, tag in s]
+        trainer.append(xseq, yseq)
+    trainer.set_params(
+        {
+            "c1": 0.1,
+            "c2": 0.1,
+            "max_iterations": 50,
+            "feature.possible_transitions": True,
+        }
     )
-    crf.fit(X, y)
-    with open(ART / "crf.pkl", "wb") as f:
-        pickle.dump(crf, f)
-    print("trained crf ->", ART / "crf.pkl")
+    trainer.train(str(ART / "crf.crfsuite"))
+    print("trained crf ->", ART / "crf.crfsuite")
 
 
 if __name__ == "__main__":

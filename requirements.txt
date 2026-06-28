@@ -1,12 +1,11 @@
-# Vercel's Python builder reads this root-level requirements.txt and its
-# parser doesn't support `-r` includes — keep in sync with api/requirements.txt.
+# PRODUCTION deps — installed by Vercel's Python builder for the serverless
+# function. Deliberately slim: NO scikit-learn/scipy/numpy (148 MB, over Vercel's
+# 250 MB limit). The two local models run on pure-python + python-crfsuite; the
+# heavy models (DistilBERT, Claude) are remote API calls. Dev/test/training deps
+# live in api/requirements.txt.
 fastapi==0.115.*
+pydantic==2.*
 vaderSentiment==3.3.2
-scikit-learn==1.5.*
-sklearn-crfsuite==0.5.0
+python-crfsuite==0.9.*
 httpx==0.27.*
 anthropic==0.40.*
-pydantic==2.*
-uvicorn==0.30.*
-pytest==8.*
-respx==0.21.*

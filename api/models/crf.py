@@ -1,11 +1,13 @@
-import pickle
 import pathlib
 from collections import Counter
+import pycrfsuite
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from api.models.base import AnalysisResult, Explanation, Aspect
 from api.models.crf_features import token_features
 
-_PKL = pathlib.Path(__file__).resolve().parent.parent.parent / "artifacts" / "crf.pkl"
+_MODEL = (
+    pathlib.Path(__file__).resolve().parent.parent.parent / "artifacts" / "crf.crfsuite"
+)
 _vader = SentimentIntensityAnalyzer()
 
 
@@ -18,13 +20,14 @@ class CrfModel:
     )
 
     def __init__(self):
-        self._crf = None
-        if _PKL.exists():
-            with open(_PKL, "rb") as f:
-                self._crf = pickle.load(f)
+        self._tagger = None
+        if _MODEL.exists():
+            t = pycrfsuite.Tagger()
+            t.open(str(_MODEL))
+            self._tagger = t
 
     def available(self) -> bool:
-        return self._crf is not None
+        return self._tagger is not None
 
     def analyze(self, text: str) -> AnalysisResult:
         if not self.available():
@@ -35,7 +38,7 @@ class CrfModel:
         if not tokens:
             return AnalysisResult(self.id, "neutral", 0.0, aspects=[])
         feats = [token_features(tokens, i) for i in range(len(tokens))]
-        tags = self._crf.predict_single(feats)
+        tags = self._tagger.tag(feats)
         pol = _vader.polarity_scores(text)["compound"]
         polarity = (
             "positive" if pol >= 0.05 else "negative" if pol <= -0.05 else "neutral"
