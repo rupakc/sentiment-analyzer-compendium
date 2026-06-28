@@ -1,4 +1,8 @@
 {
+  "permissions": {
+    "allow": ["Bash(pytest*)", "Bash(npm run*)", "Bash(python scripts/*)"],
+    "deny": ["Read(./.env)", "Read(./.env.local)"]
+  },
   "hooks": {
     "PostToolUse": [
       {
@@ -6,5 +10,16 @@
         "hooks": [{ "type": "command", "command": "bash .claude/hooks/format.sh" }]
       }
     ]
+  },
+"statusLine": { 
+  "type": "command", 
+  "command": "python3 ~/.claude/plugins/cache/intelligent-token-optimizer/intelligent-token-optimizer/0.1.0/bin/statusline.py" 
+},
+"plugins": {
+  "cache": {
+    "intelligent-token-optimizer": {
+      "enabled": true
+    }
   }
+}
 }
