@@ -8,3 +8,4 @@ dist/
 .venv/
 .DS_Store
 .pytest_cache/
+.claude/ito.state.json
